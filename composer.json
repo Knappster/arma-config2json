@@ -1,0 +1,17 @@
+{
+    "name": "knappster/arma-config2json",
+    "description": "Arma config parser to JSON",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Carl Knapp",
+            "email": "kn4ppster@gmail.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-0": {
+            "Config2Json": "src/"
+        }
+    }
+}
