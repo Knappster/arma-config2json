@@ -44,7 +44,10 @@ class RapifiedArmaClass
 		$items = $this->readCompressedInt();
 		$this->readItems($items);
 
-		return [$this->name => $this->data];
+		return [
+			'name' => $this->name
+			, 'data' => $this->data
+		];
 	}
 
 	public function readItems($items)
@@ -52,7 +55,7 @@ class RapifiedArmaClass
 		$children = [];
 
 		for ($i = 0; $i < $items; $i++) {
-			$packet_type = $this->byteToInt($this->readBytes());
+			$packet_type = $this->byteToUint($this->readBytes());
 
 			switch ($packet_type) {
 				case $this->packet_types['class_name']:
@@ -77,7 +80,7 @@ class RapifiedArmaClass
 		foreach ($children as $child) {
 			$child_data = $child->read();
 			if (array_keys($child_data)[0] != 'type') {
-				$this->data['children'][] = $child_data;
+				$this->data[$child_data['name']] = $child_data['data'];
 			}
 		}
 	}
@@ -91,7 +94,7 @@ class RapifiedArmaClass
 
 	public function token()
 	{
-		$var_type = $this->byteToInt($this->readBytes());
+		$var_type = $this->byteToUint($this->readBytes());
 		$data['name'] = $this->readString();
 
 		switch ($var_type) {
@@ -117,7 +120,7 @@ class RapifiedArmaClass
 		$count = $this->readCompressedInt();
 
 		for ($i = 0; $i < $count; $i++) {
-			$packet_type = $this->byteToInt($this->readBytes());
+			$packet_type = $this->byteToUint($this->readBytes());
 
 			switch ($packet_type) {
 				case $this->array_types['string']:
@@ -145,11 +148,11 @@ class RapifiedArmaClass
 	public function readString()
 	{
 		$string = '';
-		$chr_int = $this->byteToInt($this->readBytes());
+		$chr_int = $this->byteToUint($this->readBytes());
 
 		while ($chr_int != 0) {
 			$string .= chr($chr_int);
-			$chr_int = $this->byteToInt($this->readBytes());
+			$chr_int = $this->byteToUint($this->readBytes());
 		}
 
 		return $string;
@@ -167,11 +170,11 @@ class RapifiedArmaClass
 
 	public function readCompressedInt()
 	{
-		$val = $this->byteToInt($this->readBytes());
+		$val = $this->byteToUint($this->readBytes());
 		$has_extra = $this->isBitSet($val, 7);
 
 		while ($has_extra) {
-			$extra = $this->byteToInt($this->readBytes());
+			$extra = $this->byteToUint($this->readBytes());
 			$val += ($extra - 1) * 0x80;
 
 			if (!$this->isBitSet($extra, 7)) {
@@ -187,9 +190,9 @@ class RapifiedArmaClass
 		return ($byte & (1 << $pos)) != 0;
 	}
 
-	public function byteToInt($byte)
+	public function byteToUint($byte)
 	{
-		// Couldn't find a better way to convert a byte to uint. Weak typing sucks balls.
+		// The least verbose way I could find to convert a byte into a 32bit uint.
 		return hexdec(bin2hex($byte));
 	}
 }
