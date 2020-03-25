@@ -4,6 +4,8 @@ namespace Config2Json;
 
 class FileParser extends RapifiedArmaClass
 {
+	public $parsed_data;
+
 	public function __construct()
 	{
 
@@ -47,7 +49,79 @@ class FileParser extends RapifiedArmaClass
 			$offset_to_enums = $this->readInt32();
 
 			$this->position = ftell($this->file);
-			return json_encode($this->read());
+			$this->parsed_data = $this->read();
+
+			if (!empty($this->parsed_data)) {
+				return json_encode($this->cleanData());
+			}
 		}
+	}
+
+	private function cleanData()
+	{
+		// Find profile variables and grab all items.
+		if (array_key_exists('data', $this->parsed_data)) {
+			if (array_key_exists('ProfileVariables', $this->parsed_data['data'])) {
+				$items = $this->getItems($this->parsed_data['data']['ProfileVariables']);
+			}
+		}
+
+		return $this->flattenItems($items);
+	}
+
+	private function getItems($data)
+	{
+		$items = [];
+
+		if (array_key_exists('items', $data)) {
+			$count = $data['items'];
+
+			for ($i = 0; $i < $count; $i++) {
+				$items[] = $data['Item'.$i];
+			}
+
+			return $items;
+		}
+		return false;
+	}
+
+	private function flattenItems($items)
+	{
+		$new_items = [];
+
+		if (count($items)) {
+			foreach ($items as $key => $item) {
+				$value = '';
+
+				if (array_key_exists('name', $item)) {
+					$key = $item['name'];
+				}
+
+				if (array_key_exists('data', $item)) {
+					if (array_key_exists('value', $item['data'])) {
+						$type = $item['data']['type']['type'][0];
+
+						switch($type) {
+							case 'ARRAY':
+								$new_items[$key] = $this->flattenItems($this->getItems($item['data']['value']));
+								break;
+							
+							case 'STRING':
+								$new_items[$key] = $item['data']['value'];
+								break;
+
+							case 'SCALAR':
+								$new_items[$key] = $item['data']['value'][1];
+								break;
+						}
+
+					} else {
+						$new_items[$key] = '';
+					}
+				}
+			}
+		}
+
+		return $new_items;
 	}
 }

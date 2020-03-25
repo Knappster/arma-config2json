@@ -185,9 +185,9 @@ class RapifiedArmaClass
 		return $val;
 	}
 
-	public function isBitSet($byte, $pos)
+	public function isBitSet($val, $pos)
 	{
-		return ($byte & (1 << $pos)) != 0;
+		return ($val & (1 << $pos)) != 0;
 	}
 
 	public function byteToUint($byte)
