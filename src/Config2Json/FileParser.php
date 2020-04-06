@@ -11,7 +11,7 @@ class FileParser extends RapifiedArmaClass
 
 	}
 
-	public function parse($file_path)
+	public function parse($file_path, $return_array = false)
 	{
 		/*
 		https://community.bistudio.com/wiki/raP_File_Format_-_Elite
@@ -52,7 +52,11 @@ class FileParser extends RapifiedArmaClass
 			$this->parsed_data = $this->read();
 
 			if (!empty($this->parsed_data)) {
-				return json_encode($this->cleanData());
+				if ($return_array) {
+					return $this->cleanData();
+				} else {
+					return json_encode($this->cleanData());
+				}
 			}
 		}
 	}
